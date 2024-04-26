@@ -5,6 +5,10 @@ import { thunkDeleteWishlistItem } from "../../redux/wishlist";
 import { thunkGetWishlist, thunkUpdateWishlist } from "../../redux/wishlist";
 import { thunkAllGames } from "../../redux/game";
 import { thunkAddCart, thunkGetCart } from "../../redux/cart";
+import { useModal } from "../../context/Modal"
+import AlrWishlistModal from "../WishlistModal/AlrWishlistModal";
+import WishlistModal from "../WishlistModal/WishlistModal";
+// import Footer from "../Footer/Footer";
 import './Wishlist.css'
 
 function WishlistPage() {
@@ -17,9 +21,10 @@ function WishlistPage() {
     const allGames = useSelector(state => state.game.games)
     const userCart = userOrders?.cart?.currentCart
     const wishlist = userWishlist?.currentWishlist
-    console.log('wishlist', wishlist)
     const [forceRerender, setForceRerender] = useState(false)
     const [cartNum, setCartNum] = useState(false)
+
+    const { setModalContent } = useModal()
 
     useEffect(() => {
         dispatch(thunkGetWishlist())
@@ -27,7 +32,7 @@ function WishlistPage() {
         setForceRerender(false)
     }, [dispatch, forceRerender])
 
-    if (!currUser){
+    if (!currUser) {
         nav('/')
     }
 
@@ -55,9 +60,6 @@ function WishlistPage() {
         })
         return updatedRanks?.filter(game => game)
     }
-
-    const games = getGames()
-    console.log('games', games)
 
     function formatDate(date) {
         if (!date) {
@@ -116,7 +118,7 @@ function WishlistPage() {
 
         // filter any 0 rank items
         const zeroRankItems = wishlist.filter(item => item.rank === 0)
-        console.log('zeroRankItems:', zeroRankItems)
+        // console.log('zeroRankItems:', zeroRankItems)
 
         if (zeroRankItems.length > 0) {
             const highestRank = Math.max(...wishlist.map((item) => item.rank))
@@ -126,7 +128,7 @@ function WishlistPage() {
                 const updatedZeroRankItem = {
                     rank: highestRank + i + 1,
                 }
-                console.log('Updated rank:', updatedZeroRankItem.rank)
+                // console.log('Updated rank:', updatedZeroRankItem.rank)
 
                 await dispatch(thunkUpdateWishlist(zeroRankItem.id, updatedZeroRankItem))
             }
@@ -136,18 +138,17 @@ function WishlistPage() {
     //cart handling
 
     const addToCart = (gameId) => {
-
         const currCart = userCart?.map(item => item.game_id)
 
         if (currCart?.includes(gameId)) {
-            alert("This item is in your cart already")
+            setModalContent(<AlrWishlistModal />)
         } else {
             const newOrder = {
                 game_id: gameId
             }
 
             dispatch(thunkAddCart(newOrder))
-            alert('Game added to cart')
+            setModalContent(<WishlistModal />);
 
             setCartNum(prevState => !prevState)
         }
@@ -178,45 +179,50 @@ function WishlistPage() {
 
                 <div className="WL-username">{currUser?.username.toUpperCase()}&apos;s WISHLIST</div>
                 <hr className="WL-hr" />
-                {getGames()?.map(game => (
-                    <div key={game.id} className="WL-game-card">
-                        <div className="WL-left">
-                            <img className="WL-game-img" src={game?.images}></img>
-                        </div>
+                {getGames()?.length > 0 ? (
+                    getGames()?.map(game => (
+                        <div key={game.id} className="WL-game-card">
+                            <div className="WL-left">
+                                <img className="WL-game-img" src={game?.images}></img>
+                            </div>
 
-                        <div className="WL-right">
-                            <div className="WL-title">{game?.title}</div>
+                            <div className="WL-right">
+                                <div className="WL-title">{game?.title}</div>
 
-                            <div className="WL-mid">
-                                <div className="WL-mid-container">
-                                    <div className="WL-subtitle">OVERALL REVIEWS:&nbsp;<span className="WL-sub-title">{ }</span></div>
-                                    <div className="WL-subtitle">RELEASE DATE:&nbsp;<span className="WL-sub-date">{formatDate(game?.release_date)}</span></div>
+                                <div className="WL-mid">
+                                    <div className="WL-mid-container">
+                                        {/* <div className="WL-subtitle">OVERALL REVIEWS:&nbsp;<span className="WL-sub-title">{}</span></div> */}
+                                        <div className="WL-subtitle">RELEASE DATE:&nbsp;<span className="WL-sub-date">{formatDate(game?.release_date)}</span></div>
+                                    </div>
+
+                                    <div className="WL-addto-container">
+                                        <span className="WL-price">${game?.price}</span>
+                                        {game.inCart ? (
+                                            <button className="WL-cart-btn" onClick={() => addToCart(game.id)}>In Cart</button>
+                                        ) : (
+                                            <button className="WL-cart-btn" onClick={() => addToCart(game.id)}>Add to Cart</button>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="WL-addto-container">
-                                    <span className="WL-price">${game?.price}</span>
-                                    {game.inCart ? (
-                                        <button className="WL-cart-btn"onClick={() => addToCart(game.id)}>In Cart</button>
-                                    ) : (
-                                        <button className="WL-cart-btn" onClick={() => addToCart(game.id)}>Add to Cart</button>
-                                    )}
+                                <div className="WL-text">
+                                    Rank: <input className="WL-rank" type="text" pattern="\d*" inputMode="numeric" value={game.rank !== null && game.rank !== '' ? game.rank : 0} onClick={handleInputClick} onChange={(e) => handleEdit((wishlist.find(item => item.game_id === game.id)).id, e.target.value)} />
+                                </div>
+
+                                <div className="WL-btm">
+                                    <span className="WL-text"> Added on {formatDateAddedOn(game.WLcreatedAt)}</span>
+                                    <span className="WL-text">&nbsp;( </span>
+                                    <span className="WL-remove" onClick={() => handleRemove((wishlist.find(item => item.game_id === game.id)).id)}>remove</span>
+                                    <span className="WL-text"> ) </span>
                                 </div>
                             </div>
-
-                            <div className="WL-text">
-                                Rank: <input className="WL-rank" type="text" pattern="\d*" inputMode="numeric" value={game.rank !== null && game.rank !== '' ? game.rank : 0} onClick={handleInputClick} onChange={(e) => handleEdit((wishlist.find(item => item.game_id === game.id)).id, e.target.value)} />
-                            </div>
-
-                            <div className="WL-btm">
-                                <span className="WL-text"> Added on {formatDateAddedOn(game.WLcreatedAt)}</span>
-                                <span className="WL-text">&nbsp;( </span>
-                                <span className="WL-remove" onClick={() => handleRemove((wishlist.find(item => item.game_id === game.id)).id)}>remove</span>
-                                <span className="WL-text"> ) </span>
-                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                ) : (
+                    <div className="WL-no-items">No items in wishlist</div>
+                )}
             </div>
+
         </>
     )
 }

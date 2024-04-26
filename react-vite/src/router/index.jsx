@@ -13,6 +13,8 @@ import WishlistPage from '../components/WishlistPage/Wishlist';
 import News from '../components/News/News';
 import Support from '../components/Support/Support';
 import Library from '../components/Library/Library';
+import ReviewProfile from '../components/ReviewProfile/ReviewProfile';
+import Search from '../components/Search/Search';
 export const router = createBrowserRouter([
   {
     element: <Layout />,
@@ -68,7 +70,19 @@ export const router = createBrowserRouter([
       {
         path:'/library',
         element: <Library/>
-      }
+      },
+      {
+        path:'/profile',
+        element: <ReviewProfile/>
+      },
+      {
+        path: '/search/:query',
+        element: <Search />,
+      },
+      {
+        path: "/search",
+        element: <Search />,
+      },
     ],
   },
 ]);
