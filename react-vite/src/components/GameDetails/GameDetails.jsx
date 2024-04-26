@@ -57,17 +57,11 @@ function GameDetails() {
     const positiveReviews = reviews?.filter(review => review?.rating === 1).length
     const reviewRatio = positiveReviews / totalReviews
     // console.log('ratio', reviewRatio)
-<<<<<<< HEAD
     const { setModalContent} = useModal()
 
 
     // For adding multiple games to a cart/single game
     const addToCart = async (gameId) => {
-=======
-    const { setModalContent, showModal } = useModal()
-    console.log(showModal)
-    const addToCart = async(gameId) => {
->>>>>>> upstream/main
         if (!currUser.user) {
             setModalContent(<NavigationModal />)
         } else {
